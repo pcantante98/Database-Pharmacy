@@ -1,0 +1,95 @@
+-- Mostra todos os registos da tabela "pessoa".
+SELECT * FROM pessoa;
+
+-- Mostra todos os registos da tabela "utente".
+SELECT * FROM utente;
+
+-- Mostra todos os registos da tabela "empregado".
+SELECT * FROM empregado;
+
+-- Mostra todos os registos da tabela "morada".
+SELECT * FROM morada;
+
+-- Mostra todos os registos da tabela "prescricao_eletronica".
+SELECT * FROM prescricao_eletronica;
+
+-- Mostra todos os registos da tabela "produto".
+SELECT * FROM produto;
+
+-- 6.1
+-- Mostra registos por "Nome" na junção da tabela "Pessoa" com a tabela "Utente" a onde "Num_cc" coincide com "Num_cc_utente" onde o género é "M", a data de nascimento é menor maior que "28-04-1970" e o Nome começa por "J". 
+CREATE VIEW obterListaUtentes AS
+    SELECT 
+        Nome AS Nome
+    FROM
+        pessoa
+            INNER JOIN
+        utente ON Num_cc = Num_cc_utente
+    WHERE
+        Genero = 'M'
+            AND Data_nascimento > STR_TO_DATE('28.4.1970', '%d.%m.%Y')
+            AND Nome LIKE 'J%';
+
+-- 6.2
+-- Mostra os atributos de todos os registos da tabela "Venda" onde o "Preco_total" é maior que 20, a data de emissão é maior que "28-04-2017" e a avaliação é "Excelente"
+CREATE VIEW obterListaFaturas
+AS 
+SELECT * FROM venda WHERE Preco_total > 20 AND Data_emissao > STR_TO_DATE('28.4.2017', '%d.%m.%Y') AND Avaliacao = 'Excelente';
+
+-- 6.3
+-- Mosta o "Nome", "Cargo", "Data_nascimento e "Id_empregado" da tabela empregados onde o "Num_cc" coincide com o "Num_cc_empregado" da tabela "Pessoa" onde a "Id_empregado" é maior que 10, o "Cargo" não é "Diretor", a data de nascimento é menor que "28-04-1960" e agrupados por "Cargo"
+CREATE VIEW consultarListaEntidades
+AS 
+SELECT Nome, Cargo, Data_nascimento, Id_empregado FROM empregado INNER JOIN pessoa ON Num_cc = Num_cc_empregado WHERE Id_empregado > 10 AND Cargo != 'Diretor' AND Data_nascimento < STR_TO_DATE('28.4.1960', '%d.%m.%Y') GROUP BY Cargo;
+
+-- 6.4
+-- Mostra a "Avaliacao", a quantidade e a percentagem de avaliações da tabela venda agrupados por "Avaliacao".
+CREATE VIEW obterEstatisticasAvaliacao
+AS 
+SELECT Avaliacao AS Avaliação, COUNT(*) AS Quantidade, ROUND((COUNT(*)*100)/(SELECT COUNT(*) FROM venda)) AS Percentagem FROM venda GROUP BY Avaliacao;
+
+-- 6.5
+-- Mostra o mínimo, máximo, média e desvio padrão do "Preco_total" da tabela "Venda" onde o "Preco_total" é maior que 20 e tem uma avalição "Excelente".
+CREATE VIEW obterEstatisticasMontanteVenda
+AS 
+SELECT MIN(Preco_total) AS Mínimo, MAX(Preco_total) AS Máximo, ROUND(AVG(Preco_total)) AS Média, SQRT(SUM(POWER(Preco_total-(SELECT ROUND(AVG(Preco_total)) FROM venda WHERE Preco_total > 20 AND Avaliacao = 'Excelente'), 2))/COUNT(*)) AS 'Desvio Padrão' FROM venda WHERE Preco_total > 20 AND Avaliacao = 'Excelente';
+
+-- 7.
+-- Mostra os registos por "Nome", "Cargo e "Localidade" das tabela "Pessoa", "Morada" e "Empregado em que o número de CC é comum em cada tabela.
+SELECT Nome, Cargo, Localidade FROM pessoa INNER JOIN morada ON Num_cc = Num_cc_morada INNER JOIN empregado ON Num_cc_morada = Num_cc_empregado;
+
+-- Mostra os registos por "Nome" e "Avalicao" das tabelas "Pessoa", "Empregado" e "Venda" em que o "Num_cc" (Pessoa) coincide com o "Num_cc_empregado" (Empregado) e a "Id_empregado" (Empregado) com o "Id_empregado_venda" (Venda).
+SELECT 
+    Nome, Avaliacao AS Avaliação
+FROM
+    pessoa
+        INNER JOIN
+    empregado ON Num_cc = Num_cc_empregado
+        INNER JOIN
+    venda ON Id_empregado = Id_empregado_venda;
+
+-- Mostra os registos por "Nome" e "Id_prescricao_eletronica" da tabela "Pessoa" onde "Num_cc" coincide com o "Num_cc_utente da tabela utente e "Id_utente" coincide "Id_utente_prescricao_eletronica" na tabela "Prescricao_eletronica".
+SELECT 
+    Nome, Id_prescricao_eletronica AS 'ID Prescrição'
+FROM
+    pessoa
+        INNER JOIN
+    utente ON Num_cc = Num_cc_utente
+        INNER JOIN
+    Prescricao_eletronica ON Id_utente = Id_utente_prescricao_eletronica;
+
+-- 8.
+-- Mostra os registos como "Id_venda", "Id_prescricao_eletronica" e "Preco_total" da tabela "Venda" resultado da junção por "LEFT JOIN" com a tabela "Prescricao_eletronica" no atributo "Id_prescricao_eletronica" que coincide com o atributo "Id_prescricao_eletronica_venda".
+SELECT Id_venda AS 'ID Venda', Id_prescricao_eletronica AS 'ID Prescrição', Preco_total AS Preço FROM venda LEFT JOIN Prescricao_eletronica ON Id_prescricao_eletronica = Id_prescricao_eletronica_venda;
+
+-- Mostra os registos nas colunas "Num_cc" da tabela "Pessoa" e "Localidade" da tabela "morada" onde o "Num_cc" coincide com o "Num_cc_morada" (agrupadas por localidade).
+SELECT Num_cc AS 'Número CC', Localidade AS 'Localidade' FROM pessoa INNER JOIN morada ON Num_cc = Num_cc_morada GROUP BY Localidade;
+
+-- Mostra todas as colunas da tabela "Venda" agrupadas por "Avaliacao" onde o "Preco_total" é menor que 78.
+SELECT * FROM venda GROUP BY Avaliacao HAVING Preco_total > 78;
+
+-- Conta o número de vendas feitas ("Número de vendas") e cálcula o sumatório dos preços totais da tabela "Venda" em que o sumatório dos preços totais é maior que 800 e agrupado por "Avaliacao".
+SELECT COUNT(*) AS 'Número de vendas', SUM(Preco_total) AS 'Preço Total', Avaliacao AS 'Avaliação' FROM venda GROUP BY Avaliacao HAVING SUM(Preco_total) > 800;
+
+-- Mostra a percentagem de vendas da tabela "Venda" com avaliação "Bom"
+SELECT ROUND(COUNT(*)*100/(SELECT COUNT(*) FROM venda)) AS 'Percentagem de vendas', Avaliacao AS Avaliação FROM venda WHERE Avaliacao = 'Bom';
